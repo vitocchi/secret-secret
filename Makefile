@@ -1,8 +1,19 @@
-all:
-	RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown --locked
-	## The following line is not necessary, may work only on linux (extra size optimization)
-	wasm-opt -Os ./target/wasm32-unknown-unknown/release/*.wasm -o ./contract.wasm
-	cat ./contract.wasm | gzip -9 > ./contract.wasm.gz 
+BASENAME := $(shell basename $(CURDIR))
+
+compile:
+	docker run --rm -v "$(CURDIR)":/code \
+	--mount type=volume,source="$(BASENAME)_cache",target=/code/target \
+	--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+	cosmwasm/rust-optimizer:0.10.3
+
+up: 
+	docker run -it --rm \
+	-p 26657:26657 -p 26656:26656 -p 1317:1317 \
+	-v $(CURDIR)/artifacts:/root/code \
+	--name secretdev enigmampc/secret-network-sw-dev:v1.0.2
+
+cli:
+	docker exec -it secretdev /bin/bash
 
 clean:
 	cargo clean

@@ -48,6 +48,7 @@ pub enum HandleMsg {
         padding: Option<String>,
     },
     Deposit {
+        amount: Uint128,
         padding: Option<String>,
     },
     Balance {

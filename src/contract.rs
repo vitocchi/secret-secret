@@ -117,7 +117,7 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
 
     let response = match msg {
         // Native
-        HandleMsg::Deposit { .. } => try_deposit(deps, env),
+        HandleMsg::Deposit { amount, .. } => try_deposit(deps, env, amount),
         HandleMsg::Redeem { amount, .. } => try_redeem(deps, env, amount),
         HandleMsg::Balance { .. } => try_balance(deps, env),
 
@@ -470,34 +470,28 @@ fn get_balance<S: Storage>(storage: &S, account: &CanonicalAddr) -> u128 {
 fn try_deposit<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
+    amount: Uint128,
 ) -> StdResult<HandleResponse> {
-    let mut amount = Uint128::zero();
-
-    for coin in &env.message.sent_funds {
-        if coin.denom == "uscrt" {
-            amount = coin.amount
-        }
-    }
-
-    if amount.is_zero() {
-        return Err(StdError::generic_err("No funds were sent to be deposited"));
-    }
-
-    let amount = amount.u128();
-
     let sender_address = deps.api.canonical_address(&env.message.sender)?;
+    return deposit(&sender_address, amount.u128(), &mut deps.storage);
+}
 
-    let mut balances = Balances::from_storage(&mut deps.storage);
-    let account_balance = balances.balance(&sender_address);
+fn deposit<'a, S: Storage>(
+    account: &CanonicalAddr,
+    amount: u128,
+    storage: &'a mut S,
+) -> StdResult<HandleResponse> {
+    let mut balances = Balances::from_storage(storage);
+    let account_balance = balances.balance(account);
     if let Some(account_balance) = account_balance.checked_add(amount) {
-        balances.set_account_balance(&sender_address, account_balance);
+        balances.set_account_balance(account, account_balance);
     } else {
         return Err(StdError::generic_err(
             "This deposit would overflow your balance",
         ));
     }
 
-    let mut config = Config::from_storage(&mut deps.storage);
+    let mut config = Config::from_storage(storage);
     let total_supply = config.total_supply();
     if let Some(total_supply) = total_supply.checked_add(amount) {
         config.set_total_supply(total_supply);

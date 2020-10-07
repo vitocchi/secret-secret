@@ -35,7 +35,13 @@
       "properties": {
         "deposit": {
           "type": "object",
+          "required": [
+            "amount"
+          ],
           "properties": {
+            "amount": {
+              "$ref": "#/definitions/Uint128"
+            },
             "padding": {
               "type": [
                 "string",
@@ -430,6 +436,12 @@
             },
             "amount": {
               "$ref": "#/definitions/Uint128"
+            },
+            "padding": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
           }
         }
@@ -482,6 +494,37 @@
           "properties": {
             "address": {
               "$ref": "#/definitions/HumanAddr"
+            },
+            "padding": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "set_contract_status"
+      ],
+      "properties": {
+        "set_contract_status": {
+          "type": "object",
+          "required": [
+            "level"
+          ],
+          "properties": {
+            "level": {
+              "$ref": "#/definitions/ContractStatusLevel"
+            },
+            "padding": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
           }
         }
@@ -492,6 +535,14 @@
     "Binary": {
       "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>",
       "type": "string"
+    },
+    "ContractStatusLevel": {
+      "type": "string",
+      "enum": [
+        "normal_run",
+        "stop_all_but_withdrawals",
+        "stop_all"
+      ]
     },
     "HumanAddr": {
       "type": "string"
